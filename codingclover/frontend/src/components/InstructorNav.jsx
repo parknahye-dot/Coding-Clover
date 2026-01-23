@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
     Menubar,
@@ -12,12 +12,30 @@ import {
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Search } from "lucide-react"
+import Logout from "@/components/Logout"
+import axios from 'axios';
 
 function InstructorNav() {
+    const [loginId, setLoginId] = useState(false);
+    const [users, setUsers] = useState({ name: '' });
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const storedLoginId = localStorage.getItem("loginId");
+        const storedUsers = localStorage.getItem("users");
+
+        if (storedLoginId === "true") {
+            setLoginId(true);
+        }
+        if (storedUsers) {
+            setUsers(JSON.parse(storedUsers));
+        }
+    }, []);
     return (
         <nav className="container mx-auto flex items-center justify-between py-3 border-b bg-background">
             <div className="flex items-center gap-6">
-                <Link to="/" className="text-xl font-bold text-primary no-underline">
+                <Link to="/instructor/dashboard" className="text-xl font-bold text-primary no-underline">
                     Coding-Clover
                 </Link>
                 <Menubar>
@@ -32,10 +50,10 @@ function InstructorNav() {
                         </MenubarContent>
                     </MenubarMenu>
                     <MenubarMenu>
-                        <MenubarTrigger className="cursor-pointer">과제 관리</MenubarTrigger>
+                        <MenubarTrigger className="cursor-pointer">시험 제출</MenubarTrigger>
                         <MenubarContent>
-                            <MenubarItem>내가 올린 과제</MenubarItem>
-                            <MenubarItem>과제 등록하기</MenubarItem>
+                            <MenubarItem>시험 제출하기</MenubarItem>
+                            <MenubarItem>시험 결과</MenubarItem>
                         </MenubarContent>
                     </MenubarMenu>
                     <MenubarMenu>
@@ -59,9 +77,9 @@ function InstructorNav() {
                         className="pl-9 w-48"
                     />
                 </div>
-                <Button variant="ghost" size="sm"><Link to="/instructor/dashboard">강사 페이지</Link></Button>
-                <Button size="sm"><Link to="/">로그아웃</Link></Button>
-                {/* 로그인 로그아웃 구현해야 함 */}
+
+                <Button variant="ghost" className="text-sm">{users.name}님</Button>
+                <Logout />
             </div>
         </nav >
     );

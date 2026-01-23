@@ -2,7 +2,6 @@ package com.mysite.clover.Exam;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +12,7 @@ import com.mysite.clover.Exam.dto.InstructorExamDto;
 import com.mysite.clover.Exam.dto.StudentExamDto;
 import com.mysite.clover.ExamAttempt.ExamAttempt;
 import com.mysite.clover.ExamAttempt.dto.ExamAttemptDto;
+import com.mysite.clover.ScoreHistory.dto.ScoreHistoryDto;
 import com.mysite.clover.Users.Users;
 import com.mysite.clover.Users.UsersRepository;
 
@@ -30,13 +30,6 @@ public class ExamController {
         // 🟩 수강생 영역
         // ==========================================
 
-        /**
-         * 시험 목록 조회 (수강생용)
-         * 수강 중인 강좌 중, 응시 자격(진도율 80% 이상)이 충족된 시험 목록을 조회합니다.
-         * 
-         * @param principal 인증된 사용자 정보
-         * @return 응시 가능한 시험 목록 (StudentExamDto)
-         */
         @PreAuthorize("hasRole('STUDENT')")
         @GetMapping("/student/exam")
         public ResponseEntity<List<StudentExamDto>> listStudentExams(Principal principal) {
@@ -47,55 +40,29 @@ public class ExamController {
                                 .toList());
         }
 
-        /**
-         * 시험 상세 조회 (수강생용)
-         * 시험 응시를 위한 상세 정보를 조회합니다.
-         * 
-         * @param examId 시험 ID
-         * @return 시험 상세 정보
-         */
         @PreAuthorize("hasRole('STUDENT')")
         @GetMapping("/student/exam/{examId}")
         public ResponseEntity<StudentExamDto> getExamDetail(@PathVariable Long examId) {
                 return ResponseEntity.ok(StudentExamDto.fromEntity(examService.getExam(examId)));
         }
 
-        /**
-         * 시험 답안 제출
-         * 응시자가 답안을 제출하고 채점을 수행합니다.
-         * 
-         * @param examId    시험 ID
-         * @param score     획득 점수 (임시: 클라이언트 전송)
-         * @param principal 인증된 사용자 정보
-         * @return 시험 결과(통과 여부) 메시지
-         */
         @PreAuthorize("hasRole('STUDENT')")
         @PostMapping("/student/exam/{examId}/submit")
         public ResponseEntity<String> submitExam(
                         @PathVariable Long examId,
-                        @RequestBody Integer score, // 임시: 점수를 직접 받음 (실제론 답안을 받아 채점)
+                        @RequestBody Integer score,
                         Principal principal) {
 
                 Users student = usersRepository.findByLoginId(principal.getName())
                                 .orElseThrow(() -> new RuntimeException("학생 없음"));
                 Exam exam = examService.getExam(examId);
 
-                // 간단한 채점 로직
                 boolean passed = score >= exam.getPassScore();
-
                 examService.recordAttempt(exam, student, score, passed);
 
                 return ResponseEntity.ok("시험 제출 완료. 결과: " + (passed ? "통과" : "과락"));
         }
 
-        /**
-         * 개인 시험 결과 조회
-         * 특정 시험에 대한 본인의 응시 기록을 조회합니다.
-         * 
-         * @param examId    시험 ID
-         * @param principal 인증된 사용자 정보
-         * @return 응시 기록 목록
-         */
         @PreAuthorize("hasRole('STUDENT')")
         @GetMapping("/student/exam/{examId}/result")
         public ResponseEntity<List<ExamAttemptDto>> getExamResult(
@@ -106,24 +73,24 @@ public class ExamController {
                                 .orElseThrow(() -> new RuntimeException("학생 없음"));
 
                 List<ExamAttempt> attempts = examService.getAttemptsByExamAndUser(examId, student);
-                List<ExamAttemptDto> dtos = attempts.stream()
+                return ResponseEntity.ok(attempts.stream()
                                 .map(ExamAttemptDto::fromEntity)
-                                .collect(Collectors.toList());
-
-                return ResponseEntity.ok(dtos);
+                                .toList());
         }
 
+        // [수강생] 내 성적 보기
+        @PreAuthorize("hasRole('STUDENT')")
+        @GetMapping("/student/my-scores")
+        public ResponseEntity<List<ScoreHistoryDto>> getMyScores(Principal principal) {
+                Users student = usersRepository.findByLoginId(principal.getName()).orElseThrow();
+                return ResponseEntity.ok(examService.getMyScores(student).stream()
+                                .map(ScoreHistoryDto::fromEntity).toList());
+        }
         // ==========================================
         // 🟨 강사 영역
         // ==========================================
 
-        /**
-         * 강사 : 시험 관리 (내 시험 목록)
-         * 본인이 출제한 모든 시험 목록을 조회합니다.
-         * 
-         * @param principal 인증된 사용자 정보
-         * @return 시험 목록 (InstructorExamDto)
-         */
+        /** 강사 : 내 시험 목록 조회 (강사 본인이 출제한 모든 시험) */
         @PreAuthorize("hasRole('INSTRUCTOR')")
         @GetMapping("/instructor/exam")
         public ResponseEntity<List<InstructorExamDto>> listInstructorExams(Principal principal) {
@@ -134,20 +101,10 @@ public class ExamController {
                                 .toList());
         }
 
-        /**
-         * 강사 : 시험 등록
-         * 새로운 시험을 생성합니다. 강좌, 제한 시간, 합격 기준 등을 설정합니다.
-         * 
-         * @param form      시험 생성 요청 데이터
-         * @param principal 인증된 사용자 정보
-         * @return 등록 결과 메시지
-         */
+        /** 강사 : 시험 생성 */
         @PreAuthorize("hasRole('INSTRUCTOR')")
         @PostMapping("/instructor/exam/new")
-        public ResponseEntity<String> createExam(
-                        @RequestBody @Valid ExamCreateRequest form,
-                        Principal principal) {
-
+        public ResponseEntity<String> createExam(@RequestBody @Valid ExamCreateRequest form, Principal principal) {
                 Users instructor = usersRepository.findByLoginId(principal.getName())
                                 .orElseThrow(() -> new RuntimeException("강사 없음"));
 
@@ -157,74 +114,81 @@ public class ExamController {
                                 form.getTimeLimit(),
                                 form.getLevel(),
                                 form.getPassScore(),
+                                form.getIsPublished(),
                                 instructor);
-
                 return ResponseEntity.ok("시험 등록 성공");
         }
 
-        /**
-         * 강사 : 시험 상세 조회
-         * 본인이 출제한 시험의 상세 정보를 조회합니다.
-         * 
-         * @param id 시험 ID
-         * @return 시험 상세 정보
-         */
+        /** 강사 : 시험 수정 */
+        @PreAuthorize("hasRole('INSTRUCTOR')")
+        @PutMapping("/instructor/exam/{examId}")
+        public ResponseEntity<String> updateExam(@PathVariable Long examId,
+                        @RequestBody @Valid ExamCreateRequest form) {
+                examService.updateExam(examId, form);
+                return ResponseEntity.ok("시험 수정 성공");
+        }
+
+        /** 강사 : 시험 삭제 */
+        @PreAuthorize("hasRole('INSTRUCTOR')")
+        @DeleteMapping("/instructor/exam/{examId}")
+        public ResponseEntity<String> deleteExam(@PathVariable Long examId) {
+                examService.deleteExam(examId);
+                return ResponseEntity.ok("시험 삭제 성공");
+        }
+
+        /** 강사 : 시험 상세 조회 */
         @PreAuthorize("hasRole('INSTRUCTOR')")
         @GetMapping("/instructor/exam/{id}")
         public ResponseEntity<InstructorExamDto> getInstructorExam(@PathVariable Long id) {
                 return ResponseEntity.ok(InstructorExamDto.fromEntity(examService.getExam(id)));
         }
 
-        /**
-         * 강사 : 강좌별 시험 목록 조회
-         * 특정 강좌에 연결된 시험 목록을 조회합니다.
-         * 
-         * @param courseId 강좌 ID
-         * @return 시험 목록
-         */
+        /** 강사 : 특정 강좌에 연결된 시험 목록 조회 (수정됨) */
         @PreAuthorize("hasRole('INSTRUCTOR')")
         @GetMapping("/instructor/course/{courseId}/exam")
         public ResponseEntity<List<InstructorExamDto>> listExamsByCourse(@PathVariable Long courseId) {
+                // 수정: getExamsByInstructor 대신 getExamsByCourse 사용
                 return ResponseEntity.ok(examService.getExamsByCourse(courseId).stream()
                                 .map(InstructorExamDto::fromEntity)
                                 .toList());
         }
 
-        /**
-         * 강사 : 시험 응시 결과 조회
-         * 특정 시험에 대한 학생들의 응시 기록을 조회합니다.
-         * 
-         * @param examId 시험 ID
-         * @return 응시 기록 목록
-         */
+        /** 강사 : 학생 응시 결과 조회 */
         @PreAuthorize("hasRole('INSTRUCTOR')")
-        @GetMapping("/instructor/course/{courseId}/exam/{examId}/attempts")
-        public ResponseEntity<List<ExamAttemptDto>> listExamAttempts(
-                        @PathVariable Long examId) {
-                List<ExamAttempt> attempts = examService.getAttemptsByExam(examId);
-                List<ExamAttemptDto> dtos = attempts.stream()
+        @GetMapping("/instructor/exam/{examId}/attempts")
+        public ResponseEntity<List<ExamAttemptDto>> listExamAttempts(@PathVariable Long examId) {
+                return ResponseEntity.ok(examService.getAttemptsByExam(examId).stream()
                                 .map(ExamAttemptDto::fromEntity)
-                                .collect(Collectors.toList());
-                return ResponseEntity.ok(dtos);
+                                .toList());
+        }
+
+        // [강사] 특정 시험의 모든 응시 기록 조회
+        @PreAuthorize("hasRole('INSTRUCTOR')")
+        @GetMapping("/instructor/exam/{examId}/scores")
+        public ResponseEntity<List<ScoreHistoryDto>> getExamScoresForInstructor(@PathVariable Long examId) {
+                return ResponseEntity.ok(examService.getExamScoresForInstructor(examId).stream()
+                                .map(ScoreHistoryDto::fromEntity)
+                                .toList());
         }
 
         // ==========================================
         // 🟥 관리자 영역
         // ==========================================
 
-        /**
-         * 관리자 : 전체 시험 로그 조회
-         * 시스템 상의 모든 시험 응시 기록을 조회합니다.
-         * 
-         * @return 전체 응시 기록 목록
-         */
         @PreAuthorize("hasRole('ADMIN')")
         @GetMapping("/admin/logs/exams")
         public ResponseEntity<List<ExamAttemptDto>> getExamLogs() {
-                List<ExamAttempt> attempts = examService.getAllAttempts();
-                List<ExamAttemptDto> dtos = attempts.stream()
+                return ResponseEntity.ok(examService.getAllAttempts().stream()
                                 .map(ExamAttemptDto::fromEntity)
-                                .collect(Collectors.toList());
-                return ResponseEntity.ok(dtos);
+                                .toList());
+        }
+
+        // [관리자] 전체 성적 로그 보기
+        @PreAuthorize("hasRole('ADMIN')")
+        @GetMapping("/admin/scores/all")
+        public ResponseEntity<List<ScoreHistoryDto>> getAllScores() {
+                return ResponseEntity.ok(examService.getAllScores().stream()
+                                .map(ScoreHistoryDto::fromEntity)
+                                .toList());
         }
 }

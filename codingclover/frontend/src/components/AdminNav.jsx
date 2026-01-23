@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     Menubar,
     MenubarContent,
@@ -12,13 +12,30 @@ import {
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Search } from "lucide-react"
+import Logout from "@/components/Logout"
+import axios from 'axios';
 
 function AdminNav() {
+    const [loginId, setLoginId] = useState(false);
+    const [users, setUsers] = useState({ name: '' });
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const storedLoginId = localStorage.getItem("loginId");
+        const storedUsers = localStorage.getItem("users");
+
+        if (storedLoginId === "true") {
+            setLoginId(true);
+        }
+        if (storedUsers) {
+            setUsers(JSON.parse(storedUsers));
+        }
+    }, []);
     return (
         <nav className="flex items-center justify-between px-24 py-3 border-b bg-background">
             {/* 로고 + 메뉴바 */}
             <div className="flex items-center gap-6">
-                <Link to="/" className="text-xl font-bold text-primary no-underline">
+                <Link to="/admin/dashboard" className="text-xl font-bold text-primary no-underline">
                     Coding-Clover
                 </Link>
 
@@ -30,7 +47,7 @@ function AdminNav() {
                             <MenubarItem></MenubarItem>
                         </MenubarContent>
                     </MenubarMenu>
-                    <MenubarMenu>
+                    {/* <MenubarMenu>
                         <MenubarTrigger className="cursor-pointer">문제 제출</MenubarTrigger>
                         <MenubarContent>
                             <MenubarGroup>
@@ -38,8 +55,7 @@ function AdminNav() {
                                 <MenubarItem>문제 관리</MenubarItem>
                             </MenubarGroup>
                         </MenubarContent>
-                    </MenubarMenu>
-
+                    </MenubarMenu> */}
                     <MenubarMenu>
                         <MenubarTrigger className="cursor-pointer">공지 업로드</MenubarTrigger>
                     </MenubarMenu>
@@ -52,7 +68,6 @@ function AdminNav() {
                             </MenubarGroup>
                         </MenubarContent>
                     </MenubarMenu>
-
                 </Menubar>
             </div>
 
@@ -66,8 +81,9 @@ function AdminNav() {
                         className="pl-9 w-48"
                     />
                 </div>
-                <Button variant="ghost" size="sm"><Link to="/admin/dashboard">관리자 페이지</Link></Button>
-                <Button size="sm"><Link to="/">로그아웃</Link></Button>
+
+                <Button variant="ghost" className="text-sm">{users.name}님</Button>
+                <Logout />
             </div>
         </nav>
     );

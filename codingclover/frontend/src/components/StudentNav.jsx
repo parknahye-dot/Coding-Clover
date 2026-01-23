@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
     Menubar,
@@ -13,10 +13,25 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Search } from "lucide-react"
 import Logout from "@/components/Logout"
+import axios from 'axios';
 
 function StudentNav() {
-
     const [loginId, setLoginId] = useState(false);
+    const [users, setUsers] = useState({ name: '' });
+
+    useEffect(() => {
+        const storedLoginId = localStorage.getItem("loginId");
+        const storedUsers = localStorage.getItem("users");
+
+        if (storedLoginId === "true") {
+            setLoginId(true);
+        }
+        if (storedUsers) {
+            const parsedUsers = JSON.parse(storedUsers);
+            setUsers(parsedUsers);
+            console.log("현재 로그인한 사용자:", parsedUsers);
+        }
+    }, []);
 
     return (
         <nav className="container mx-auto flex items-center justify-between py-3 border-b bg-background">
@@ -53,7 +68,12 @@ function StudentNav() {
                         </MenubarContent>
                     </MenubarMenu>
                     <MenubarMenu>
-                        <MenubarTrigger className="cursor-pointer">마이페이지</MenubarTrigger>
+                        <Link
+                            to="/student/mypage"
+                            className="px-3 py-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                        >
+                            마이페이지
+                        </Link>
                     </MenubarMenu>
                 </Menubar>
             </div>
@@ -70,8 +90,8 @@ function StudentNav() {
                 </div>
                 {!loginId ? (
                     <Button size="sm"><Link to="/auth/login">로그인</Link></Button>)
-                    :(<>
-                        <span className="text-sm">{user?.name}님</span>
+                    : (<>
+                        <Button variant="ghost" className="text-sm">{users.name}님</Button>
                         <Logout />
                     </>)}
 

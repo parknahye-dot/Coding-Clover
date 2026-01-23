@@ -28,7 +28,7 @@ const MainLogin = () => {
         if (secureLocalStorage === "true") {
             setLoginId('');
         }
-    }, []); // [] 이거 뭐하는 용도임? []이거 배열인데 뭐 담아가는 거지 로그인 정보 담는 건가
+    }, []); // [] 이거 뭐하는 용도임? []이거 무한루프 방지용임
 
     const handleLogin = async () => {
 
@@ -38,8 +38,6 @@ const MainLogin = () => {
             setError('아이디, 비밀번호를 입력해 주세요.');
             return;
         };
-
-
 
         try {
             const response = await fetch('/auth/login', {
@@ -51,7 +49,11 @@ const MainLogin = () => {
                     loginId: loginId,    // state 값 사용
                     password: password   // state 값 사용
                 })
-            });
+            
+            }
+        );
+
+        console.log("try 구문 성공");
 
             if (!response.ok) {
                 setError('아이디 또는 비밀번호가 일치하지 않습니다.');
@@ -60,9 +62,10 @@ const MainLogin = () => {
 
             const userData = await response.json();
 
-            localStorage.setItem("user", JSON.stringify(userData));
+            localStorage.setItem("users", JSON.stringify(userData));
 
             if (loginId && password) {
+                console.log("try 구문 성공");
                 localStorage.setItem("loginId", true);
                 setLoginId(false);
                 switch (userData.role) {
