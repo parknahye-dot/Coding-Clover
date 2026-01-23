@@ -1,6 +1,6 @@
 # 📌 코딩 학습 LMS URL 구조 설계
 
-## 🟦 공통 영역 (비로그인 / 로그인 공통)
+# 🟦 공통 영역 (비로그인 / 로그인 공통)
 /                      → 홈
 /course                → 강좌 목록
 /course/level/1        → 초급 강좌
@@ -17,50 +17,16 @@
 /auth/login             → 로그인
 /auth/register          → 회원가입
 /auth/oauth             → 소셜 로그인
-<<<<<<< HEAD
-=======
 /mypage                 → 회원 정보
 /mypage/profile         → 회원 정보 수정
 /mypage/password        → 비밀번호 변경
 
-## 🟩 수강생 영역
+
+# 🟩 수강생 영역
 
 (로그인 + 수강생 권한 필요)
 /student/dashboard      → 수강생 대시보드
 
-<<<<<<< HEAD
-/student/courses        → 내 강좌
-/student/courses/active → 수강 중 강좌
-/student/courses/completed → 수강 완료 강좌
-/student/courses/planned → 수강 예정 강좌
-
-/student/courses/{courseId} → 강좌 상세
-/student/courses/{courseId}/lectures → 강의 목록
-/student/lectures/{lectureId} → 강의 시청
-
-### 📌 코딩 연습
-/student/practice            → 실습 문제 목록
-/student/practice/level/{level} → 레벨별 문제
-/student/practice/{problemId} → 문제 상세
-/student/practice/{problemId}/submit → 코드 제출
-
-### 📌 시험 / 평가
-/student/exams               → 시험 목록
-/student/exams/levelup       → 레벨업 시험
-/student/exams/{examId}      → 시험 응시
-/student/exams/{examId}/result → 시험 결과
-
-### 📌 출석 / 이력
-/student/attendance          → 출석 기록
-/student/history             → 학습 로그
-/student/history/exams       → 시험 응시 이력
-
-### 📌 결제 / 수강권
-/student/payments            → 결제 내역
-/student/payments/credits    → 크레딧 현황
-/student/payments/purchase  → 수강권 구매
-/student/payments/refunds   → 환불 내역
-=======
 /student/course        → 내 강좌
 /student/course/active → 수강 중 강좌
 /student/course/completed → 수강 완료 강좌
@@ -68,9 +34,10 @@
 /student/course/{courseId} → 강좌 상세
 /student/course/{courseId}/lectures → 강의 목록
 /student/lecture/{lectureId} → 강의 시청
-/student/course/{courseId}/enroll → 수강 신청
-/student/course/{courseId}/cancel → 수강 취소
-/student/enrollments            → 내 수강 내역 조회
+/student/enrollment/{courseId}/enroll → 수강 신청
+/student/enrollment/{courseId}/cancel → 수강 취소
+/student/enrollment/active       → 수강 중 강좌
+/student/enrollment/completed    → 수강 완료 강좌
 
 ### 📌 코딩 연습
 /student/problem                 → 문제 목록
@@ -86,35 +53,34 @@
 
 ### 📌 출석 / 이력
 /student/history             → 학습 로그
-/student/history/exam       → 시험 응시 이력
+/student/history/attendance  → 출석 이력
+/student/history/exam        → 시험 응시 이력
 
 ### 📌 결제 / 수강권
 /student/payment            → 결제 내역
 <!-- /student/payments/credits    → 크레딧 현황 추후 구현-->
 /student/payment/purchase  → 수강권 구매
 /student/payment/refunds   → 환불 내역
->>>>>>> sub
 
 ### 📌 Q/A
-/student/qna                 → 내 질문 목록
-/student/qna/new             → 질문 등록
+/student/qna                 → 질문 목록
+/student/qna/my              → 내가 작성한 질문 목록
+/student/qna/add             → 질문 등록
 /student/qna/{id}            → 질문 상세
+/student/qna/{id}/edit       → 질문 수정
+/student/qna/{id}/delete     → 질문 삭제
+/student/qna/wait            → wait 상태 글만 보기
+/student/qna/answered        → answered 상태 글만 보기
 
-<<<<<<< HEAD
-### 📌 알림 / 설정
-/student/notifications       → 알림 목록
-
-/student/settings            → 설정
-/student/settings/profile    → 회원 정보 수정
-/student/settings/password   → 비밀번호 변경
-=======
->>>>>>> sub
 
 ## 🟨 강사 영역
 
 (강사 승인 후 접근 가능)
 
 /instructor/dashboard        → 강사 대시보드
+/instructor/mypage                 → 회원 정보
+/instructor/mypage/profile         → 회원 정보 수정
+/instructor/mypage/password        → 비밀번호 변경
 
 <<<<<<< HEAD
 /instructor/courses          → 강좌 관리
@@ -153,9 +119,14 @@
 /instructor/exam/{id} → 시험 상세
 >>>>>>> sub
 
-### 📌 Q/A / 정산
-/instructor/qna              → 질문 관리
-/instructor/qna/{id}         → 답변 등록 / 수정
+### 📌 Q/A
+/instructor/qna              → 질문 전체보기
+/instructor/qna/{id}/add     → 답변 등록
+/instructor/qna/{id}/delete  → 답변 삭제
+/instructor/qna/{id}/edit    → 답글 수정
+/instructor/qna/{id}/owned   → 내 강좌에 대한 질문만 조회
+/instructor/qna/wait         → wait 상태 글만 보기
+/instructor/qna/answered     → answered 상태 글만 보기
 
 <<<<<<< HEAD
 /instructor/settlement       → 정산 내역
@@ -169,11 +140,14 @@
 /instructor/account          → 계좌 정보 관리 -->
 >>>>>>> sub
 
-## 🟥 관리자 영역
+# 🟥 관리자 영역
 
 (관리자 전용)
 
 /admin/dashboard             → 관리자 대시보드
+/admin/mypage                 → 회원 정보
+/admin/mypage/profile         → 회원 정보 수정
+/admin/mypage/password        → 비밀번호 변경
 
 ### 📌 회원 / 권한 관리
 /admin/users                 → 전체 회원 관리
@@ -241,4 +215,3 @@
 /admin/logs/exams            → 시험 로그
 
 /admin/notice               → 공지 관리
->>>>>>> sub

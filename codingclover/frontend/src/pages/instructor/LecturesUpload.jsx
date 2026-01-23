@@ -1,63 +1,88 @@
-import React from 'react';
-import StudentNav from '../../components/StudentNav';
+import React, { useState } from 'react';
+import InstructorNav from '@/components/InstructorNav';
 import Tail from '../../components/Tail';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
+import InstructorMain from './InstructorMain'
+import axios from 'axios';
 
-function Enroll() {
-  let course = {
-    title: 'React 기초 강좌',
-    create_by: '홍길동',
-    level: '초급',
-    description: '리액트의 기초부터 배우는 강좌입니다.',
-    thumbnail_url: ''
-  }
+function LecturesUpload() {
+  const [course, setCourse] = useState({
+    title: ' ',
+    description: ' ',
+    price: 0,
+    level: 1,
+  })
+
+  // thumbnailUrl: ' '
+
+  const handleChange = (event) => {
+    console.log('입력 값:', event.target);
+    const { name, value } = event.target;
+    setCourse(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleClick = () => {
+    console.log('제출버튼누름');
+    axios.post('http://localhost:3333/instructor/course/new', {
+      title: course.title,
+      description: course.description,
+      price: course.price,
+      level: course.level
+    })
+      .then((response) => console.log('결과 : ', response.data))
+      .catch((err) => { console.log('실패', err) });
+  };
+
+  // setCourse(post save on DB & <InstructorMain/>);
+
+  // 서버 데이터 사용 시
+  // const [course, setCourse] = useState([]);
+
+  // useEffect(()=>{ fetch('/instructor/course/new').then(res=>res.json()).then(data => setCourse(data))})
 
   return (
     <>
-      <StudentNav />
+      <InstructorNav />
 
       <section className="container mx-auto px-4 py-16">
-        <h1 className="text-3xl font-bold mb-8">수강 신청</h1>
+        <h1 className="text-3xl font-bold mb-8">강좌 개설</h1>
 
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>{course.title || '강좌명'}</CardTitle>
-            <CardDescription>강사: {course.create_by || '미정'}</CardDescription>
-          </CardHeader>
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader></CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-4 items-center gap-4">
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-4 items-center gap-6">
               <label className="text-right font-medium">강좌명</label>
-              <Input value={course.title} className="col-span-3" />
+              <Input name="title" type="text" onChange={handleChange} value={course.title} className="col-span-3" method="post" />
             </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
+            {/* <div className="grid grid-cols-4 items-center gap-6">
               <label className="text-right font-medium">강사명</label>
-              <Input value={course.create_by} className="col-span-3" />
-            </div>
+              <Input name={created_by} type="text" onChange={handleChange} value={course.create_by} className="col-span-3" method="post" />
+            </div> */}
 
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-4 items-center gap-6">
               <label className="text-right font-medium">난이도</label>
-              <Input value={course.level} className="col-span-3" />
+              <Input name="level" type="text" onChange={handleChange} value={course.level} className="col-span-3" method="post" />
             </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right font-medium">목차</label>
-              <Input value={course.description} className="col-span-3" />
+            <div className="grid grid-cols-4 items-center gap-6">
+              <label className="text-right font-medium">강좌 개요</label>
+              <Input name="description" type="text" onChange={handleChange} value={course.description} className="col-span-3" method="post" />
             </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label className="text-right font-medium">썸네일</label>
-              <Input value={course.thumbnail_url} placeholder="이미지 URL" className="col-span-3" />
+            <div className="grid grid-cols-4 items-center gap-6">
+              <label className="text-right font-medium">강좌 이용료</label>
+              <Input name="price" type="text" onChange={handleChange} value={course.price} className="col-span-3" method="post" />
             </div>
+
+            <CardFooter className="flex justify-end gap-3">
+              <Button variant="outline">임시 저장</Button>
+              <Button onClick={handleClick} method="post">개설 신청</Button>
+            </CardFooter>
           </CardContent>
-
-          <CardFooter className="flex justify-end gap-3">
-            <Button variant="outline">임시 저장</Button>
-            <Button>개설 신청</Button>
-          </CardFooter>
         </Card>
       </section>
 
@@ -66,4 +91,4 @@ function Enroll() {
   );
 }
 
-export default Enroll;
+export default LecturesUpload;

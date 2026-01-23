@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
     Menubar,
     MenubarContent,
@@ -12,19 +12,14 @@ import {
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Search } from "lucide-react"
+import Logout from "@/components/Logout"
 
 function StudentNav() {
 
-    const { levelId } = useParams();
-
-    const [course, setCourse] = useState([
-        { id: 1, label:"초급" }, 
-        { id: 2, label:"중급" }, 
-        { id: 3, label:"고급" }
-    ])
+    const [loginId, setLoginId] = useState(false);
 
     return (
-        <nav className="flex items-center justify-between px-24 py-3 border-b bg-background">
+        <nav className="container mx-auto flex items-center justify-between py-3 border-b bg-background">
             {/* 로고 + 메뉴바 */}
             <div className="flex items-center gap-6">
                 <Link to="/" className="text-xl font-bold text-primary no-underline">
@@ -36,9 +31,9 @@ function StudentNav() {
                         <MenubarTrigger className="cursor-pointer">전체 강좌</MenubarTrigger>
                         <MenubarContent>
                             <MenubarGroup>
-                                <MenubarItem><Link to="/course/level/:levelId">초급</Link></MenubarItem>
-                                <MenubarItem><Link to="/course/level/2">중급</Link></MenubarItem>
-                                <MenubarItem><Link to="/course/level/3">고급</Link></MenubarItem>
+                                <Link to="/course/level/1"><MenubarItem>초급</MenubarItem></Link>
+                                <Link to="/course/level/2"><MenubarItem>중급</MenubarItem></Link>
+                                <Link to="/course/level/3"><MenubarItem>고급</MenubarItem></Link>
                             </MenubarGroup>
                         </MenubarContent>
                     </MenubarMenu>
@@ -57,6 +52,9 @@ function StudentNav() {
                             <MenubarItem>자유게시판</MenubarItem>
                         </MenubarContent>
                     </MenubarMenu>
+                    <MenubarMenu>
+                        <MenubarTrigger className="cursor-pointer">마이페이지</MenubarTrigger>
+                    </MenubarMenu>
                 </Menubar>
             </div>
 
@@ -70,8 +68,14 @@ function StudentNav() {
                         className="pl-9 w-48"
                     />
                 </div>
-                <Button variant="ghost" size="sm"><Link to="/auth/login">로그인</Link></Button>
-                <Button size="sm"><Link to="/auth/register">회원가입</Link></Button>
+                {!loginId ? (
+                    <Button size="sm"><Link to="/auth/login">로그인</Link></Button>)
+                    :(<>
+                        <span className="text-sm">{user?.name}님</span>
+                        <Logout />
+                    </>)}
+
+                {/* <Button size="sm"><Link to="/auth/register">회원가입</Link></Button> */}
             </div>
         </nav>
     );
